@@ -10,6 +10,7 @@
 #define NAME_MAX_LENGTH	20
 #define	OK				0
 #define ERROR			-1
+#define PLAYERS_DB		"db.bin"
 //************************************************************************************
 
 
@@ -24,63 +25,54 @@ typedef struct player_tag
 
 
 //**************************************PROTOTYPES************************************
-char create_player (FILE * fp, char * name, uint32_t cash, uint32_t wins);
+int8_t create_player (char * name);
 //************************************************************************************
 
 int main (void)
 {
-	FILE *fp;
-	char response=OK;
+	char name_aux[NAME_MAX_LENGTH];
 	
-	fp = fopen ("db.bin", "wb");
+	printf("Ingrese el nombre del jugador: ");
+	fgets(name_aux, NAME_MAX_LENGTH, stdin);
+	strtok(name_aux, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
 	
-	response += create_player(fp, "Charly", 6, 1);
-	response += create_player(fp, "Diegote", 18, 2);
-	response += create_player(fp, "Marce", 36, 4);
-	
-	if (response == OK)
-	{
-		printf("Archivo creado exitosamente!\n");
-	}
-	else
-	{
-		printf("Error al intentar crear el archivo\n");
-	}
-	
-	fclose(fp);
+	create_player(name_aux);
 		
 	getchar();
 	return 0;
 }
 
 
-char create_player (FILE * fp, char * name, uint32_t cash, uint32_t wins)
+int8_t create_player (char * name)
 {
+	FILE *fp;
 	char ret=ERROR;
 	player_t new_player;
-		
-	if (strlen(name) < NAME_MAX_LENGTH)
+	
+	fp = fopen (PLAYERS_DB, "ab");
+	
+	if (fp == NULL)
 	{
-		ret = OK;
-		strcpy(new_player.name, name);
-		new_player.wins = wins;
-		new_player.cash = cash;
-		
-		fwrite(&new_player, sizeof(player_t), 1, fp);
+		printf("Error en la base de datos \n");
 	}
+	else if (strlen(name) >= NAME_MAX_LENGTH)
+	{
+		printf("El nombre del jugador es demasiado largo\n");
+	}
+	else
+	{
+		strcpy(new_player.name, name);
+		new_player.wins = 0;
+		new_player.cash = 0;
+		fwrite(&new_player, sizeof(player_t), 1, fp);
+		printf("Jugador creado exitosamente!!\n");
+		ret = OK;
+	}
+	
+	fclose(fp);
 	
 	return ret;
 }
-
-
-
-
-
-
-
-
-
-
 
 
 
