@@ -1,36 +1,38 @@
 
-//******************************************INCLUDES******************************************
+//**********************************************INCLUDES**********************************************
 #include <stdio.h>
 #include <string.h>
 #include <inttypes.h>
-//********************************************************************************************
+//****************************************************************************************************
 
 
-//******************************************DEFINES*******************************************
+//**********************************************DEFINES***********************************************
 #define NAME_MAX_LENGTH		20
 #define	PLAYER_NOT_FOUND	-1
 
 #define CONSULTAR	1
 #define	INGRESAR	2
 #define	SALIR		3
-//********************************************************************************************
+
+#define PLAYERS_DB		"\\\\PUMP\\Ingenieria\\Proyectos Terminados\\MUX04x02\\db_j.bin"
+//****************************************************************************************************
 
 
-//******************************************DATA TYPES****************************************
+//**********************************************DATA TYPES********************************************
 typedef struct player_tag
 {
 	char name[NAME_MAX_LENGTH];
 	uint32_t cash;
 	uint32_t wins;
 }player_t;
-//********************************************************************************************
+//****************************************************************************************************
 
 
-//******************************************DEFINES*******************************************
+//**********************************************DEFINES***********************************************
 int16_t find_player(char * player_name);
 int8_t get_player_data(uint16_t player_position, player_t * player_data);
 void update_player_data(uint16_t player_position, const player_t * player_data);
-//********************************************************************************************
+//****************************************************************************************************
 
 int main (void)
 {
@@ -45,7 +47,7 @@ int main (void)
 		printf("1) Ver datos de jugador\n2) Ingresar ganador\n3) Salir\n\nSeleccione la opcion deseada: ");
 		scanf("%"SCNu16, &option);
 		fflush(stdin);
-		printf("\n\n");
+		printf("\n");
 		
 		switch (option)
 		{
@@ -53,13 +55,14 @@ int main (void)
 							printf("Jugador: ");
 							fgets(name_aux, NAME_MAX_LENGTH, stdin);
 							strtok(name_aux, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
-							printf("\n\n");
+							printf("\n");
 							
 							position = find_player(name_aux);
 						
 							if (position == PLAYER_NOT_FOUND)
 							{
-								printf("El jugador ingresado no existe!\n\n\n");
+								printf("El jugador ingresado no existe!\n");
+								printf("*******************************************\n\n");
 							}
 							else
 							{
@@ -67,6 +70,7 @@ int main (void)
 								printf ("Nombre: %s\n", player_data.name);
 								printf ("Victorias: %"PRIu32"\n", player_data.wins);
 								printf ("Dinero: %"PRIu32"\n", player_data.cash);
+								printf("*******************************************\n\n");
 							}
 							break;
 				
@@ -75,19 +79,21 @@ int main (void)
 							printf("Ganador: ");
 							fgets(name_aux, NAME_MAX_LENGTH, stdin);
 							strtok(name_aux, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
-							printf("\n\n");
+							printf("\n");
 							
 							position = find_player(name_aux);
 						
 							if (position == PLAYER_NOT_FOUND)
 							{
-								printf("El jugador ingresado no existe!\n\n\n");
+								printf("El jugador ingresado no existe!\n");
+								printf("*******************************************\n\n");
 							}
 							else
 							{
 								printf("Monto ganado: ");
 								scanf("%"SCNu16, &prize);
 								fflush(stdin);
+								printf("*******************************************\n\n");
 						
 								get_player_data(position, &player_data);
 								player_data.wins++;
@@ -103,7 +109,8 @@ int main (void)
 				
 				
 			default:
-							printf("La opcion ingresada no es valida\n\n\n");
+							printf("La opcion ingresada no es valida\n");
+							printf("*******************************************\n\n");
 							break;
 		}
 	}
@@ -119,7 +126,7 @@ int16_t find_player(char * player_name)
 	int16_t player_found = PLAYER_NOT_FOUND;
 	player_t data_read;
 	
-	fp = fopen ("db.bin", "rb");	// Opens the file only for reading
+	fp = fopen (PLAYERS_DB, "rb");	// Opens the file only for reading
 	
 	if (fp == NULL)
 	{
@@ -153,7 +160,7 @@ int8_t get_player_data(uint16_t player_position, player_t * player_data)
 	FILE *fp;
 	int8_t ret=PLAYER_NOT_FOUND;
 	
-	fp = fopen ("db.bin", "rb");	// Opens the file only for reading
+	fp = fopen (PLAYERS_DB, "rb");	// Opens the file only for reading
 	
 	if (fp == NULL)
 	{
@@ -180,7 +187,7 @@ void update_player_data(uint16_t player_position, const player_t * player_data)
 {
 	FILE *fp;
 	
-	fp = fopen ("db.bin", "rb+");	// Opens the file for reading and writing
+	fp = fopen (PLAYERS_DB, "rb+");	// Opens the file for reading and writing
 	
 	if (fp == NULL)
 	{
@@ -194,7 +201,6 @@ void update_player_data(uint16_t player_position, const player_t * player_data)
 	
 	fclose(fp);
 }
-
 
 
 
