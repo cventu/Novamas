@@ -15,3 +15,4 @@ players_db_manager.o: players_db_manager.c
 clean:
 	del $(OBJS)
 	del Novamas.exe
+	del db_j.bin

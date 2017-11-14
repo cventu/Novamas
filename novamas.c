@@ -15,10 +15,11 @@
 #define PLAYERS_MAX			10
 
 #define CONSULTAR			1
-#define	INGRESAR			2
+#define	GANADOR				2
 #define	CREAR				3
 #define TABLAS				4
-#define	SALIR				5
+#define	MIGRAR				5
+#define	SALIR				6
 //****************************************************************************************************
 
 
@@ -35,10 +36,11 @@ int main (void)
 	char name_aux[NAME_MAX_LENGTH];
 	uint16_t prize=0;
 	uint16_t option=0;
+	uint8_t confirmation=0;
 	
 	while (option != SALIR)
 	{
-		printf("1) Ver datos de jugador\n2) Ingresar ganador\n3) Crear jugador\n4) Ver tablas\n5) Salir\n\nSeleccione la opcion deseada: ");
+		printf("1) Ver datos de jugador\n2) Ingresar ganador\n3) Crear jugador\n4) Ver tablas\n5) Migrar DB\n6) Salir\n\nSeleccione la opcion deseada: ");
 		scanf("%"SCNu16, &option);
 		fflush(stdin);
 		printf("\n");
@@ -74,7 +76,7 @@ int main (void)
 							break;
 				
 				
-			case INGRESAR:
+			case GANADOR:
 							printf("Ganador: ");
 							fgets(name_aux, NAME_MAX_LENGTH, stdin);
 							strtok(name_aux, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
@@ -151,6 +153,34 @@ int main (void)
 							break;
 				
 					
+			case MIGRAR:	
+							printf("Agrego el nuevo miembro en la estructura new_player_format?\n");
+							printf("Lo inicializo en la funcion players_db_migrate?\n");
+							printf("Recuerde que la estructura player_t no debe ser modificada aun\n\n");
+							printf("Presione (Y/N): ");
+							confirmation = getchar();
+							printf("\n");
+							
+							if (confirmation == 'Y' || confirmation == 'y')
+							{
+								if (players_db_migrate() != DATABASE_ERROR)
+								{
+									printf("Migracion exitosa! Ahora recuerde:\n");
+									printf("a) Agregar el nuevo miembro a la estructura player_t en el .c y en el .h\n");
+									printf("b) Inicializar el nuevo miembro en la funcion players_db_create\n");
+								}
+								else
+								{
+									printf("Migracion fallida!\n");
+								}
+							}
+							else
+							{
+								printf("Migracion abortada!\n");
+							}
+							break;
+							
+							
 			case SALIR:
 							break;
 				
@@ -160,7 +190,7 @@ int main (void)
 							break;
 		}
 		
-		printf("*******************************************\n\n");
+		printf("****************************************************************************\n\n");
 	}
 		
 	return 0;
