@@ -9,17 +9,30 @@
 
 
 //**********************************************DEFINES***********************************************
-#define CASH				0
-#define	WINS				1
+#define CASH				  0
+#define	WINS				  1
 
-#define PLAYERS_MAX			10
+#define PLAYERS_MAX	 10
 
-#define CONSULTAR			1
-#define	GANADOR				2
-#define	CREAR				3
-#define TABLAS				4
-#define	MIGRAR				5
-#define	SALIR				6
+#define CONSULTAR		  1
+#define	GANADOR			  2
+#define	CREAR				  3
+#define TABLAS			  4
+#define	MIGRAR			  5
+#define MODIFICAR		  6
+#define	SALIR				  7
+
+#define	ALIAS_MOD		  1
+#define	CASH_MOD		  2
+#define	WINS_MOD		  3
+#define	ADMIN_MOD		  4
+#define PASS_MOD		  5
+#define SALIR_MOD		  6
+
+#define CHANGE_ALIAS	1
+#define CHANGE_PASS		2
+#define	TABLES				3
+#define	QUIT					4
 //****************************************************************************************************
 
 
@@ -33,166 +46,451 @@ int main (void)
 {
 	int16_t position=0;
 	player_t player_data;
-	char name_aux[NAME_MAX_LENGTH];
-	uint16_t prize=0;
+	char name_aux[NAME_MAX_LENGTH]; 
+	char id_aux[ID_LENGTH+1];					
+	char password_aux[MAX_PASSWORD_LENGTH+1];	
+	uint16_t prize=0;													
 	uint16_t option=0;
 	uint8_t confirmation=0;
+	uint8_t player_modified=0;
+	uint8_t access_granted=0;
+	char aux_buffer_1[MAX_PASSWORD_LENGTH+2];	// This will be used temporary to store the password
+	char aux_buffer_2[MAX_PASSWORD_LENGTH+2];	// This will be used temporary to store the password
 	
-	while (option != SALIR)
+	printf("Usuario: ");
+	fgets(id_aux, ID_LENGTH+2, stdin);
+	fflush(stdin);
+	strtok(id_aux, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
+	printf("Password: ");
+	fgets(password_aux, MAX_PASSWORD_LENGTH+1, stdin);
+	fflush(stdin);
+	strtok(password_aux, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
+	printf("\n");
+	
+	position = players_db_find(id_aux);
+										
+	if (position == PLAYER_NOT_FOUND)
 	{
-		printf("1) Ver datos de jugador\n2) Ingresar ganador\n3) Crear jugador\n4) Ver tablas\n5) Migrar DB\n6) Salir\n\nSeleccione la opcion deseada: ");
-		scanf("%"SCNu16, &option);
-		fflush(stdin);
-		printf("\n");
-		
-		switch (option)
-		{
-			case CONSULTAR:
-							printf("Jugador: ");
-							fgets(name_aux, NAME_MAX_LENGTH, stdin);
-							strtok(name_aux, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
-							printf("\n");
-							
-							position = players_db_find(name_aux);
-						
-							if (position == PLAYER_NOT_FOUND)
-							{
-								printf("El jugador ingresado no existe!\n");
-							}
-							else if (position == DATABASE_ERROR)
-							{
-								printf("Error en la base de datos!\n");
-							}
-							else if (players_db_get(position, &player_data) != DATABASE_ERROR)
-							{
-								printf ("Nombre: %s\n", player_data.name);
-								printf ("Victorias: %"PRIu32"\n", player_data.wins);
-								printf ("Dinero: %"PRIu32"\n", player_data.cash);
-							}
-							else
-							{
-								printf("Error en la base de datos!\n");
-							}
-							break;
-				
-				
-			case GANADOR:
-							printf("Ganador: ");
-							fgets(name_aux, NAME_MAX_LENGTH, stdin);
-							strtok(name_aux, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
-							printf("\n");
-							
-							position = players_db_find(name_aux);
-						
-							if (position == PLAYER_NOT_FOUND)
-							{
-								printf("El jugador ingresado no existe!\n");
-							}
-							else if (position == DATABASE_ERROR)
-							{
-								printf("Error en la base de datos!\n");
-							}
-							else
-							{
-								printf("Monto ganado: ");
-								scanf("%"SCNu16, &prize);
-								fflush(stdin);
-								printf("\n");								
-								
-								if (players_db_get(position, &player_data) != DATABASE_ERROR)
-								{
-									player_data.wins++;
-									player_data.cash += prize;
-									
-									if (players_db_update(position, &player_data) == DATABASE_ERROR)
-									{
-										printf("Error en la base de datos!\n");
-									}
-									else
-									{
-										printf("Ganador ingresado!\n");
-									}
-								}
-								else
-								{
-									printf("Error en la base de datos!\n");
-								}
-							}
-							break;
-							
-							
-			case CREAR:
-							printf("Ingrese el nombre del jugador: ");
-							fgets(name_aux, NAME_MAX_LENGTH, stdin);
-							strtok(name_aux, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
-							printf("\n");
-							
-							switch (players_db_create(name_aux))
-							{
-								case DATABASE_ERROR:
-													printf("Error en la base de datos!\n");
-													break;
-													
-													
-								case NAME_TOO_LONG:
-													printf("El nombre ingresado es demasiado largo!\n");
-													break;
-													
-													
-								case PLAYER_CREATED:
-													printf("Jugador creado exitosamente!\n");
-													break;
-							}
-							break;
-							
-							
-			case TABLAS:	
-							print_table(CASH);
-							printf("\n");
-							print_table(WINS);
-							break;
-				
-					
-			case MIGRAR:	
-							printf("Agrego el nuevo miembro en la estructura new_player_format?\n");
-							printf("Lo inicializo en la funcion players_db_migrate?\n");
-							printf("Recuerde que la estructura player_t no debe ser modificada aun\n\n");
-							printf("Presione (Y/N): ");
-							confirmation = getchar();
-							printf("\n");
-							
-							if (confirmation == 'Y' || confirmation == 'y')
-							{
-								if (players_db_migrate() != DATABASE_ERROR)
-								{
-									printf("Migracion exitosa! Ahora recuerde:\n");
-									printf("a) Agregar el nuevo miembro a la estructura player_t en el .c y en el .h\n");
-									printf("b) Inicializar el nuevo miembro en la funcion players_db_create\n");
-								}
-								else
-								{
-									printf("Migracion fallida!\n");
-								}
-							}
-							else
-							{
-								printf("Migracion abortada!\n");
-							}
-							break;
-							
-							
-			case SALIR:
-							break;
-				
-				
-			default:
-							printf("La opcion ingresada no es valida\n");
-							break;
-		}
-		
-		printf("****************************************************************************\n\n");
+		printf("Usuario o password incorrecto!\n");
+		getchar();
 	}
-		
+	else if (position == DATABASE_ERROR)
+	{
+		printf("Error en la base de datos!\n");
+	}
+	else if (players_db_get(position, &player_data) != DATABASE_ERROR)
+	{
+		if (strcmp(password_aux, player_data.password) == 0)
+		{
+			access_granted=1;
+		}
+		else
+		{
+			printf("Usuario o password incorrecto!\n");
+			getchar();
+		}
+	}
+	else
+	{
+		printf("Error en la base de datos!\n");
+	}
+	
+	if (access_granted && player_data.is_admin)
+	{
+		while (option != SALIR)
+		{
+			printf("1) Ver datos de jugador\n2) Ingresar ganador\n3) Crear jugador\n4) Ver tablas\n5) Migrar DB\n6) Modificar datos de jugador\n7) Salir\n\nSeleccione la opcion deseada: ");
+			scanf("%"SCNu16, &option);
+			fflush(stdin);
+			printf("\n");
+			
+			switch (option)
+			{
+				case CONSULTAR:
+												printf("ID: ");
+												fgets(id_aux, ID_LENGTH+2, stdin);
+												fflush(stdin);
+												strtok(id_aux, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
+												printf("\n");
+												
+												position = players_db_find(id_aux);
+											
+												if (position == PLAYER_NOT_FOUND)
+												{
+													printf("El jugador ingresado no existe!\n");
+												}
+												else if (position == DATABASE_ERROR)
+												{
+													printf("Error en la base de datos!\n");
+												}
+												else if (players_db_get(position, &player_data) != DATABASE_ERROR)
+												{
+													printf("ID: %s\n", player_data.id);
+													printf ("Nombre: %s\n", player_data.name);
+													printf ("Victorias: %"PRIu32"\n", player_data.wins);
+													printf ("Dinero: %"PRIu32"\n", player_data.cash);
+													
+													if (player_data.is_admin)
+													{
+														printf("Admin: Si\n");
+													}
+													else
+													{
+														printf("Admin: No\n");
+													}
+												}
+												else
+												{
+													printf("Error en la base de datos!\n");
+												}
+												break;
+					
+					
+				case GANADOR:
+												printf("Ganador: ");
+												fgets(id_aux, ID_LENGTH+2, stdin);
+												fflush(stdin);
+												strtok(id_aux, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
+												printf("\n");
+												
+												position = players_db_find(id_aux);
+											
+												if (position == PLAYER_NOT_FOUND)
+												{
+													printf("El jugador ingresado no existe!\n");
+												}
+												else if (position == DATABASE_ERROR)
+												{
+													printf("Error en la base de datos!\n");
+												}
+												else
+												{
+													printf("Monto ganado: ");
+													scanf("%"SCNu16, &prize);
+													fflush(stdin);
+													printf("\n");								
+													
+													if (players_db_get(position, &player_data) != DATABASE_ERROR)
+													{
+														player_data.wins++;
+														player_data.cash += prize;
+														
+														if (players_db_update(position, &player_data) == DATABASE_ERROR)
+														{
+															printf("Error en la base de datos!\n");
+														}
+														else
+														{
+															printf("Ganador ingresado!\n");
+														}
+													}
+													else
+													{
+														printf("Error en la base de datos!\n");
+													}
+												}
+												break;
+								
+								
+				case CREAR:
+												printf("Ingrese el nombre del jugador: ");
+												fgets(name_aux, NAME_MAX_LENGTH, stdin);
+												fflush(stdin);
+												strtok(name_aux, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
+												printf("Ingrese el ID del jugador: ");
+												fgets(id_aux, ID_LENGTH+1, stdin);
+												fflush(stdin);
+												strtok(id_aux, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
+												printf("Ingrese el password del jugador: ");
+												fgets(password_aux, MAX_PASSWORD_LENGTH, stdin);
+												fflush(stdin);
+												strtok(password_aux, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
+												printf("\n");
+												
+												switch (players_db_create(name_aux, id_aux, password_aux))
+												{
+													case DATABASE_ERROR:
+																							printf("Error en la base de datos!\n");
+																							break;
+																		
+																		
+													case NAME_TOO_LONG:
+																							printf("El nombre ingresado es demasiado largo!\n");
+																							break;
+																							
+																							
+													case PASSWORD_TOO_LONG:
+																							printf("El password ingresado es demasiado largo!\n");
+																							break;
+																		
+																		
+													case PLAYER_CREATED:
+																							printf("Jugador creado exitosamente!\n");
+																							break;
+												}
+												break;
+								
+								
+				case TABLAS:	
+												print_table(CASH);
+												printf("\n");
+												print_table(WINS);
+												break;
+					
+						
+				case MIGRAR:	
+												printf("Agrego el nuevo miembro en la estructura new_player_format en el .c?\n");
+												printf("Compilo?\n");
+												printf("Recuerde que la estructura player_t no debe ser modificada aun\n\n");
+												printf("Presione [S/N]: ");
+												confirmation = getchar();
+												printf("\n");
+												
+												if (confirmation == 'S' || confirmation == 's')
+												{
+													if (players_db_migrate() != DATABASE_ERROR)
+													{
+														printf("Migracion exitosa! Ahora recuerde:\n");
+														printf("a) Agregar el nuevo miembro a la estructura player_t en el .c y en el .h\n");
+														printf("b) Agregar el nuevo miembro en la funcion players_db_migrate\n");
+														printf("c) Inicializar el nuevo miembro en la funcion players_db_create\n");
+														printf("d) Agregar el nuevo miembro en la opcion CONSULTAR datos del jugador en el menu\n");
+														printf("e) Agregar el nuevo miembro en la opcion MODIFICAR datos del jugador en el menu\n");
+													}
+													else
+													{
+														printf("Migracion fallida!\n");
+													}
+												}
+												else
+												{
+													printf("Migracion abortada!\n");
+												}
+												break;
+												
+												
+				case MODIFICAR:	
+												player_modified=0;
+												printf("ID: ");
+												fgets(id_aux, ID_LENGTH+2, stdin);
+												fflush(stdin);
+												strtok(id_aux, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
+												printf("****************************************************************************\n\n");
+												
+												position = players_db_find(id_aux);
+											
+												if (position == PLAYER_NOT_FOUND)
+												{
+													printf("El jugador ingresado no existe!\n");
+												}
+												else if (position == DATABASE_ERROR)
+												{
+													printf("Error en la base de datos!\n");
+												}
+												else if (players_db_get(position, &player_data) != DATABASE_ERROR)
+												{
+													printf("1) Alias\n2) Dinero\n3) Victorias\n4) Administrador\n5) Password\n6) Salir\n\nSeleccione el parametro que desea modificar: ");
+													scanf("%"SCNu16, &option);
+													fflush(stdin);
+													printf("\n");
+													
+													switch(option)
+													{
+														case ALIAS_MOD:
+																					printf("Ingrese alias: ");
+																					fgets(name_aux, NAME_MAX_LENGTH+1, stdin);
+																					fflush(stdin);
+																					strtok(name_aux, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
+																					printf("\n");
+																					strcpy(player_data.name, name_aux);
+																					player_modified=1;
+																					break;
+																			
+																			
+														case CASH_MOD:
+																					printf("Ingrese dinero: ");
+																					scanf("%"SCNu16, &prize);
+																					fflush(stdin);
+																					printf("\n");
+																					player_data.cash = prize;
+																					player_modified=1;
+																					break;
+																				
+																				
+														case WINS_MOD:
+																					printf("Ingrese victorias: ");
+																					scanf("%"SCNu16, &prize);
+																					fflush(stdin);
+																					printf("\n");
+																					player_data.wins = prize;
+																					player_modified=1;
+																					break;
+																				
+																				
+														case ADMIN_MOD:
+																					printf("Privilegio de Administrador?\n");
+																					printf("Presione [S/N]: ");
+																					confirmation = getchar();
+																					printf("\n");
+																					
+																					if (confirmation == 'S' || confirmation == 's')
+																					{
+																						player_data.is_admin = 1;
+																						player_modified=1;
+																					}
+																					else if (confirmation == 'N' || confirmation == 'n')
+																					{
+																						player_data.is_admin = 0;
+																						player_modified=1;
+																					}
+																					else
+																					{
+																						printf("Opcion invalida!\n");
+																					}
+																					break;
+																					
+																					
+														case PASS_MOD:
+																					printf("Ingrese password: ");
+																					fgets(password_aux, MAX_PASSWORD_LENGTH+1, stdin);
+																					fflush(stdin);
+																					strtok(password_aux, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
+																					printf("\n");
+																					strcpy(player_data.password, password_aux);
+																					player_modified=1;
+																					break;
+																					
+																		
+														case SALIR_MOD:
+																					break;
+																				
+														
+														default:
+																					printf("La opcion ingresada no es valida\n");
+																					break;
+													}
+													
+													if (player_modified == 1)
+													{
+														if (players_db_update(position, &player_data) == DATABASE_ERROR)
+														{
+															printf("Error en la base de datos!\n");
+														}
+														else
+														{
+															printf("Jugador modificado!\n");
+														}
+													}
+												}
+												else
+												{
+													printf("Error en la base de datos!\n");
+												}
+												break;
+								
+								
+				case SALIR:
+												break;
+					
+					
+				default:
+												printf("La opcion ingresada no es valida\n");
+												break;
+			}
+			
+			printf("****************************************************************************\n\n");
+		}
+	}
+	else if ( access_granted && (player_data.is_admin == 0) )
+	{
+		while (option != QUIT)
+		{
+			printf("1) Cambiar nombre\n2) Cambiar password\n3) Ver tablas\n4) Salir\n\nSeleccione la opcion deseada: ");
+			scanf("%"SCNu16, &option);
+			fflush(stdin);
+			printf("\n");
+			
+			switch (option)
+			{
+				case CHANGE_ALIAS:	
+													printf("Ingrese nuevo nombre: ");
+													fgets(name_aux, NAME_MAX_LENGTH+2, stdin);
+													fflush(stdin);
+													strtok(name_aux, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
+													printf("\n");
+													strcpy(player_data.name, name_aux);
+													
+													if (players_db_update(position, &player_data) == DATABASE_ERROR)
+													{
+														printf("Error en la base de datos!\n");
+													}
+													else
+													{
+														printf("Nombre actualizado!\n");
+													}
+													break;
+												
+												
+				case CHANGE_PASS:	
+													printf("Ingrese nuevo password: ");
+													fgets(aux_buffer_1, MAX_PASSWORD_LENGTH+2, stdin);
+													fflush(stdin);
+													strtok(aux_buffer_1, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
+													printf("\n");
+													
+													printf("Ingrese password nuevamente: ");
+													fgets(aux_buffer_2, MAX_PASSWORD_LENGTH+2, stdin);
+													fflush(stdin);
+													strtok(aux_buffer_2, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
+													printf("\n");
+													
+													if ( strcmp(aux_buffer_1, aux_buffer_2) == 0 )
+													{
+														if ( strlen(aux_buffer_1) <= MAX_PASSWORD_LENGTH )
+														{
+															strcpy(player_data.password, aux_buffer_1);
+															
+															if (players_db_update(position, &player_data) == DATABASE_ERROR)
+															{
+																printf("Error en la base de datos!\n");
+															}
+															else
+															{
+																printf("Password actualizado!\n");
+															}
+														}
+														else
+														{
+															printf("El password ingresado es demasiado largo. Intente nuevamente.\n");
+														}
+													}
+													else
+													{
+														printf("Los passwords ingresados no coinciden. Intente nuevamente.\n");
+													}
+													break;
+												
+												
+				case TABLES:	
+													print_table(CASH);
+													printf("\n");
+													print_table(WINS);
+													break;
+								
+								
+				case QUIT:
+													break;
+					
+					
+				default:
+													printf("La opcion ingresada no es valida\n");
+													break;
+			}
+			
+			printf("****************************************************************************\n\n");
+		}
+	}
+			
 	return 0;
 }
 
@@ -210,29 +508,29 @@ void print_table(uint8_t category)
 		switch(category)
 		{			
 			case CASH:
-						printf("   Nombre\tPesos\n\n");
-						qsort(players_list, players_num, sizeof(player_t), compare_cash);
-					
-						for (indexer=0 ; indexer < players_num ; indexer++)
-						{
-							printf("%"PRIu8") %-10s\t%"PRIu32"\n", indexer+1, players_list[indexer].name, players_list[indexer].cash);
-						}
-						break;
+								printf("   Nombre\tPesos\n\n");
+								qsort(players_list, players_num, sizeof(player_t), compare_cash);
+							
+								for (indexer=0 ; indexer < players_num ; indexer++)
+								{
+									printf("%"PRIu8") %-10s\t%"PRIu32"\n", indexer+1, players_list[indexer].name, players_list[indexer].cash);
+								}
+								break;
 					
 					
 			case WINS:
-						printf("   Nombre\tVictorias\n\n");
-						qsort(players_list, players_num, sizeof(player_t), compare_wins);
-							
-						for (indexer=0 ; indexer < players_num ; indexer++)
-						{
-							printf("%"PRIu8") %-10s\t%"PRIu32"\n", indexer+1, players_list[indexer].name, players_list[indexer].wins);
-						}
-						break;
+								printf("   Nombre\tVictorias\n\n");
+								qsort(players_list, players_num, sizeof(player_t), compare_wins);
+									
+								for (indexer=0 ; indexer < players_num ; indexer++)
+								{
+									printf("%"PRIu8") %-10s\t%"PRIu32"\n", indexer+1, players_list[indexer].name, players_list[indexer].wins);
+								}
+								break;
 					
 					
 			default:
-						break;
+								break;
 		}
 	}
 	else
