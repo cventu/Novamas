@@ -7,22 +7,24 @@
 
 
 //**********************************************DEFINES***********************************************
-#define PLAYERS_DB			"\\\\PUMP\\Ingenieria\\Proyectos Terminados\\MUX04x02\\db_j.bin"
-//#define PLAYERS_DB			"db_j.bin"	// Testing DB
+#define PLAYERS_DB				"\\\\PUMP\\Ingenieria\\Proyectos Terminados\\MUX04x02\\db_j.bin"
+//#define PLAYERS_DB					"db_j.bin"	// Testing DB
 
-#define PLAYERS_MAX			10
-#define NAME_MAX_LENGTH		20
+#define PLAYERS_MAX					10
 
-#define ID_LENGTH			 6	
+#define NAME_MAX_LENGTH			20
+#define ID_LENGTH			 			 6	
+#define MAX_PASSWORD_LENGTH	20
 
 #define PLAYER_DATA_LOADED	 0
 #define PLAYER_DATA_UPDATED	 0
-#define	PLAYER_CREATED		 0
-#define DB_MIGRATED			 0
-#define	PLAYER_NOT_FOUND	-1
-#define	INVALID_POSITION	-1
-#define NAME_TOO_LONG		-1
-#define DATABASE_ERROR		-2
+#define	PLAYER_CREATED		 	 0
+#define DB_MIGRATED					 0
+#define	PLAYER_NOT_FOUND		-1
+#define	INVALID_POSITION		-1
+#define NAME_TOO_LONG				-1
+#define DATABASE_ERROR			-2
+#define	PASSWORD_TOO_LONG		-3
 //****************************************************************************************************
 
 
@@ -32,6 +34,9 @@ typedef struct player_tag
 	char name[NAME_MAX_LENGTH];
 	uint32_t cash;
 	uint32_t wins;
+	char id[ID_LENGTH+1];
+	char password[MAX_PASSWORD_LENGTH+1];
+	uint8_t is_admin;
 }player_t;
 
 typedef struct new_player_format_tag	// Used for DB migration process only
@@ -39,20 +44,23 @@ typedef struct new_player_format_tag	// Used for DB migration process only
 	char name[NAME_MAX_LENGTH];
 	uint32_t cash;
 	uint32_t wins;
+	char id[ID_LENGTH+1];
+	char password[MAX_PASSWORD_LENGTH+1];
+	uint8_t is_admin;
 }new_player_format_t;
 //****************************************************************************************************
 
 
 //**********************************************PROTOTYPES********************************************
-int16_t players_db_find(char * player_name);
+int16_t players_db_find(char * player_id);
 int8_t players_db_get(uint16_t player_position, player_t * player_data);
 int8_t players_db_update(uint16_t player_position, const player_t * player_data);
 int8_t players_db_get_all(player_t * players_array);
-int8_t players_db_create(char * name);
+int8_t players_db_create(char * name, char * id, char * password);
 int8_t players_db_migrate(void);
 //****************************************************************************************************
 
-int16_t players_db_find(char * player_name)
+int16_t players_db_find(char * player_id)
 {
 	FILE *fp;
 	uint16_t count=0;
@@ -71,7 +79,7 @@ int16_t players_db_find(char * player_name)
 		{
 			fread(&data_read, sizeof(data_read), 1, fp);
 			
-			if (strcmp(player_name, data_read.name) == 0)
+			if (strcmp(player_id, data_read.id) == 0)
 			{
 				player_found = count;
 			}
@@ -169,7 +177,7 @@ int8_t players_db_get_all(player_t * players_array)	// Fills array with all play
 }
 
 
-int8_t players_db_create(char * name)
+int8_t players_db_create(char * name, char * id, char * password)
 {
 	FILE *fp;
 	char ret;
@@ -185,11 +193,18 @@ int8_t players_db_create(char * name)
 	{
 		ret = NAME_TOO_LONG;
 	}
+	else if (strlen(password) >= MAX_PASSWORD_LENGTH)
+	{
+		ret = PASSWORD_TOO_LONG;
+	}
 	else
 	{
 		strcpy(new_player.name, name);
+		strcpy(new_player.id, id);
+		strcpy(new_player.password, password);
 		new_player.wins = 0;
 		new_player.cash = 0;
+		new_player.is_admin = 0;
 		fwrite(&new_player, sizeof(new_player), 1, fp);
 		ret = PLAYER_CREATED;
 	}
@@ -222,8 +237,11 @@ int8_t players_db_migrate(void)
 				for (indexer=0 ; indexer < players_num ; indexer++)
 				{
 					strcpy(new_player_data.name, players_list[indexer].name);
+					strcpy(new_player_data.id, players_list[indexer].id);
+					strcpy(new_player_data.password, players_list[indexer].password);
 					new_player_data.cash = players_list[indexer].cash;
 					new_player_data.wins = players_list[indexer].wins;
+					new_player_data.is_admin = players_list[indexer].is_admin;
 					fwrite(&new_player_data, sizeof(new_player_data), 1, fp);
 				}
 				
