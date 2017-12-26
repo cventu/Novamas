@@ -12,7 +12,7 @@
 
 #define PLAYERS_MAX					10
 
-#define NAME_MAX_LENGTH			20
+#define ALIAS_MAX_LENGTH		20
 #define ID_LENGTH			 			 6	
 #define MAX_PASSWORD_LENGTH	20
 
@@ -22,7 +22,7 @@
 #define DB_MIGRATED					 0
 #define	PLAYER_NOT_FOUND		-1
 #define	INVALID_POSITION		-1
-#define NAME_TOO_LONG				-1
+#define ALIAS_TOO_LONG			-1
 #define DATABASE_ERROR			-2
 #define	PASSWORD_TOO_LONG		-3
 //****************************************************************************************************
@@ -31,7 +31,7 @@
 //**********************************************DATA TYPES********************************************
 typedef struct player_tag
 {
-	char name[NAME_MAX_LENGTH];
+	char alias[ALIAS_MAX_LENGTH];
 	uint32_t cash;
 	uint32_t wins;
 	char id[ID_LENGTH+1];
@@ -41,7 +41,7 @@ typedef struct player_tag
 
 typedef struct new_player_format_tag	// Used for DB migration process only
 {
-	char name[NAME_MAX_LENGTH];
+	char alias[ALIAS_MAX_LENGTH];
 	uint32_t cash;
 	uint32_t wins;
 	char id[ID_LENGTH+1];
@@ -56,7 +56,7 @@ int16_t players_db_find(char * player_id);
 int8_t players_db_get(uint16_t player_position, player_t * player_data);
 int8_t players_db_update(uint16_t player_position, const player_t * player_data);
 int8_t players_db_get_all(player_t * players_array);
-int8_t players_db_create(char * name, char * id, char * password);
+int8_t players_db_create(char * alias, char * id, char * password);
 int8_t players_db_migrate(void);
 //****************************************************************************************************
 
@@ -177,7 +177,7 @@ int8_t players_db_get_all(player_t * players_array)	// Fills array with all play
 }
 
 
-int8_t players_db_create(char * name, char * id, char * password)
+int8_t players_db_create(char * alias, char * id, char * password)
 {
 	FILE *fp;
 	char ret;
@@ -189,9 +189,9 @@ int8_t players_db_create(char * name, char * id, char * password)
 	{
 		ret = DATABASE_ERROR;
 	}
-	else if (strlen(name) >= NAME_MAX_LENGTH)
+	else if (strlen(alias) >= ALIAS_MAX_LENGTH)
 	{
-		ret = NAME_TOO_LONG;
+		ret = ALIAS_TOO_LONG;
 	}
 	else if (strlen(password) >= MAX_PASSWORD_LENGTH)
 	{
@@ -199,7 +199,7 @@ int8_t players_db_create(char * name, char * id, char * password)
 	}
 	else
 	{
-		strcpy(new_player.name, name);
+		strcpy(new_player.alias, alias);
 		strcpy(new_player.id, id);
 		strcpy(new_player.password, password);
 		new_player.wins = 0;
@@ -236,7 +236,7 @@ int8_t players_db_migrate(void)
 			{	
 				for (indexer=0 ; indexer < players_num ; indexer++)
 				{
-					strcpy(new_player_data.name, players_list[indexer].name);
+					strcpy(new_player_data.alias, players_list[indexer].alias);
 					strcpy(new_player_data.id, players_list[indexer].id);
 					strcpy(new_player_data.password, players_list[indexer].password);
 					new_player_data.cash = players_list[indexer].cash;
@@ -254,11 +254,3 @@ int8_t players_db_migrate(void)
 	
 	return ret;
 }
-
-
-
-
-
-
-
-

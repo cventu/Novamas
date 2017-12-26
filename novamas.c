@@ -129,7 +129,7 @@ uint8_t admin_menu(void)
 	char id[ID_LENGTH+1];
 	player_t player_data;
 	uint16_t prize=0;
-	char name[NAME_MAX_LENGTH];
+	char alias[ALIAS_MAX_LENGTH];
 	char password[MAX_PASSWORD_LENGTH+1];
 	uint8_t confirmation=0;
 	uint8_t player_modified=0;
@@ -162,7 +162,7 @@ uint8_t admin_menu(void)
 										else if (players_db_get(position, &player_data) != DATABASE_ERROR)
 										{
 											printf("ID: %s\n", player_data.id);
-											printf ("Nombre: %s\n", player_data.name);
+											printf ("Alias: %s\n", player_data.alias);
 											printf ("Victorias: %"PRIu32"\n", player_data.wins);
 											printf ("Dinero: %"PRIu32"\n", player_data.cash);
 											
@@ -229,10 +229,10 @@ uint8_t admin_menu(void)
 						
 						
 		case CREAR:
-										printf("Ingrese el nombre del jugador: ");
-										fgets(name, NAME_MAX_LENGTH, stdin);
+										printf("Ingrese el alias del jugador: ");
+										fgets(alias, ALIAS_MAX_LENGTH, stdin);
 										fflush(stdin);
-										strtok(name, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
+										strtok(alias, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
 										printf("Ingrese el ID del jugador: ");
 										fgets(id, ID_LENGTH+1, stdin);
 										fflush(stdin);
@@ -243,15 +243,15 @@ uint8_t admin_menu(void)
 										strtok(password, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
 										printf("\n");
 										
-										switch (players_db_create(name, id, password))
+										switch (players_db_create(alias, id, password))
 										{
 											case DATABASE_ERROR:
 																					printf("Error en la base de datos!\n");
 																					break;
 																
 																
-											case NAME_TOO_LONG:
-																					printf("El nombre ingresado es demasiado largo!\n");
+											case ALIAS_TOO_LONG:
+																					printf("El alias ingresado es demasiado largo!\n");
 																					break;
 																					
 																					
@@ -334,11 +334,11 @@ uint8_t admin_menu(void)
 											{
 												case ALIAS_MOD:
 																			printf("Ingrese alias: ");
-																			fgets(name, NAME_MAX_LENGTH+1, stdin);
+																			fgets(alias, ALIAS_MAX_LENGTH+1, stdin);
 																			fflush(stdin);
-																			strtok(name, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
+																			strtok(alias, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
 																			printf("\n");
-																			strcpy(player_data.name, name);
+																			strcpy(player_data.alias, alias);
 																			player_modified=1;
 																			break;
 																	
@@ -444,12 +444,12 @@ uint8_t admin_menu(void)
 uint8_t player_menu(player_t * player_data, int16_t position)
 {
 	uint16_t option=0;
-	char name[NAME_MAX_LENGTH];
+	char alias[ALIAS_MAX_LENGTH];
 	char aux_buffer_1[MAX_PASSWORD_LENGTH+2];	// This will be used temporary to store the password
 	char aux_buffer_2[MAX_PASSWORD_LENGTH+2];	// This will be used temporary to store the password
 	uint8_t ret=0;
 	
-	printf("1) Cambiar nombre\n2) Cambiar password\n3) Ver tablas\n4) Salir\n\nSeleccione la opcion deseada: ");
+	printf("1) Cambiar alias\n2) Cambiar password\n3) Ver tablas\n4) Salir\n\nSeleccione la opcion deseada: ");
 	scanf("%"SCNu16, &option);
 	fflush(stdin);
 	printf("\n");
@@ -457,12 +457,12 @@ uint8_t player_menu(player_t * player_data, int16_t position)
 	switch (option)
 	{
 		case CHANGE_ALIAS:	
-											printf("Ingrese nuevo nombre: ");
-											fgets(name, NAME_MAX_LENGTH+2, stdin);
+											printf("Ingrese nuevo alias: ");
+											fgets(alias, ALIAS_MAX_LENGTH+2, stdin);
 											fflush(stdin);
-											strtok(name, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
+											strtok(alias, "\n");	// fgets stores new line character at the end. Strtok is used to delete that character
 											printf("\n");
-											strcpy(player_data->name, name);
+											strcpy(player_data->alias, alias);
 											
 											if (players_db_update(position, player_data) == DATABASE_ERROR)
 											{
@@ -470,7 +470,7 @@ uint8_t player_menu(player_t * player_data, int16_t position)
 											}
 											else
 											{
-												printf("Nombre actualizado!\n");
+												printf("Alias actualizado!\n");
 											}
 											break;
 										
@@ -551,23 +551,23 @@ void print_table(uint8_t category)
 		switch(category)
 		{			
 			case CASH:
-								printf("   Nombre\tPesos\n\n");
+								printf("   Alias\tPesos\n\n");
 								qsort(players_list, players_num, sizeof(player_t), compare_cash);
 							
 								for (indexer=0 ; indexer < players_num ; indexer++)
 								{
-									printf("%"PRIu8") %-10s\t%"PRIu32"\n", indexer+1, players_list[indexer].name, players_list[indexer].cash);
+									printf("%"PRIu8") %-10s\t%"PRIu32"\n", indexer+1, players_list[indexer].alias, players_list[indexer].cash);
 								}
 								break;
 					
 					
 			case WINS:
-								printf("   Nombre\tVictorias\n\n");
+								printf("   Alias\tVictorias\n\n");
 								qsort(players_list, players_num, sizeof(player_t), compare_wins);
 									
 								for (indexer=0 ; indexer < players_num ; indexer++)
 								{
-									printf("%"PRIu8") %-10s\t%"PRIu32"\n", indexer+1, players_list[indexer].name, players_list[indexer].wins);
+									printf("%"PRIu8") %-10s\t%"PRIu32"\n", indexer+1, players_list[indexer].alias, players_list[indexer].wins);
 								}
 								break;
 					
